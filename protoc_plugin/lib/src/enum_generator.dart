@@ -20,6 +20,9 @@ class EnumGenerator extends ProtobufContainer {
   @override
   final String fullName;
 
+  @override
+  final FeatureSet features;
+
   final EnumDescriptorProto _descriptor;
   final List<EnumValueDescriptorProto> _canonicalValues =
       <EnumValueDescriptorProto>[];
@@ -50,7 +53,8 @@ class EnumGenerator extends ProtobufContainer {
           parent.fullName == ''
               ? descriptor.name
               : '${parent.fullName}.${descriptor.name}',
-      _descriptor = descriptor {
+      _descriptor = descriptor,
+      features = mergeFeatures(parent.features, descriptor.options.features) {
     final usedNames = {...reservedEnumNames};
     for (var i = 0; i < descriptor.value.length; i++) {
       final value = descriptor.value[i];

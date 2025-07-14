@@ -31,6 +31,8 @@ class ProtobufField {
   final BaseType baseType;
   final ProtobufContainer parent;
 
+  final FeatureSet features;
+
   ProtobufField.message(
     FieldNames names,
     ProtobufContainer parent,
@@ -50,7 +52,8 @@ class ProtobufField {
     GenerationContext ctx,
   ) : memberNames = dartNames,
       fullName = '${parent.fullName}.${descriptor.name}',
-      baseType = BaseType(descriptor, ctx);
+      baseType = BaseType(descriptor, ctx),
+      features = mergeFeatures(parent.features, descriptor.options.features);
 
   /// The index of this field in MessageGenerator.fieldList.
   ///
@@ -72,7 +75,8 @@ class ProtobufField {
   bool get isDeprecated => descriptor.options.deprecated;
 
   bool get isRequired =>
-      descriptor.label == FieldDescriptorProto_Label.LABEL_REQUIRED;
+      descriptor.label == FieldDescriptorProto_Label.LABEL_REQUIRED ||
+      features.fieldPresence == FeatureSet_FieldPresence.LEGACY_REQUIRED;
 
   bool get isRepeated =>
       descriptor.label == FieldDescriptorProto_Label.LABEL_REPEATED;
@@ -91,20 +95,7 @@ class ProtobufField {
       return false;
     }
 
-    switch (parent.fileGen!.syntax) {
-      case ProtoSyntax.proto3:
-        if (!descriptor.hasOptions()) {
-          return true; // packed by default in proto3
-        } else {
-          return !descriptor.options.hasPacked() || descriptor.options.packed;
-        }
-      case ProtoSyntax.proto2:
-        if (!descriptor.hasOptions()) {
-          return false; // not packed by default in proto3
-        } else {
-          return descriptor.options.packed;
-        }
-    }
+    return shouldPack(descriptor, parent.fileGen!.edition, features);
   }
 
   /// Whether the field has the `overrideGetter` annotation set to true.
@@ -137,19 +128,8 @@ class ProtobufField {
   bool get hasPresence {
     // NB. Map fields are represented as repeated message fields
     if (isRepeated) return false;
-    return true;
-    // TODO(sigurdm): to provide the correct semantics for non-optional proto3
-    // fields would need something like the following:
-    // return baseType.isMessage ||
-    //   descriptor.proto3Optional ||
-    //   parent.fileGen.descriptor.syntax == "proto2";
-    //
-    // This change would break any accidental uses of the proto3 hazzers, and
-    // would require some clean-up.
-    //
-    // We could consider keeping hazzers for proto3-oneof fields. There they
-    // seem useful and not breaking proto3 semantics, and dart protobuf uses it
-    // for example in package:protobuf/src/protobuf/mixins/well_known.dart.
+
+    return hasFieldPresence(descriptor, parent.fileGen!.edition, features);
   }
 
   /// Returns the type to use for the Dart field type.

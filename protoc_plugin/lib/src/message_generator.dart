@@ -57,6 +57,9 @@ class MessageGenerator extends ProtobufContainer {
   @override
   final ProtobufContainer? parent;
 
+  @override
+  final FeatureSet features;
+
   final DescriptorProto _descriptor;
   final List<EnumGenerator> _enumGenerators = <EnumGenerator>[];
   final List<MessageGenerator> _messageGenerators = <MessageGenerator>[];
@@ -102,7 +105,8 @@ class MessageGenerator extends ProtobufContainer {
       _oneofFields = List.generate(
         countRealOneofs(descriptor),
         (int index) => [],
-      ) {
+      ),
+      features = mergeFeatures(parent.features, descriptor.options.features) {
     mixin = _getMixin(declaredMixins, defaultMixin);
     for (var i = 0; i < _descriptor.enumType.length; i++) {
       final e = _descriptor.enumType[i];

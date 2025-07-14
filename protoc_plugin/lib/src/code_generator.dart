@@ -14,6 +14,7 @@ import '../protoc.dart' show FileGenerator;
 import 'gen/dart_options.pb.dart';
 import 'gen/google/api/client.pb.dart';
 import 'gen/google/protobuf/compiler/plugin.pb.dart';
+import 'gen/google/protobuf/descriptor.pb.dart';
 import 'linker.dart';
 import 'options.dart';
 import 'output_config.dart';
@@ -57,6 +58,8 @@ abstract class ProtobufContainer {
 
   // The generator containing this entity.
   ProtobufContainer? get parent;
+
+  FeatureSet get features;
 
   /// The top-level parent of this entity, or itself if it is a top-level
   /// entity.
@@ -132,8 +135,11 @@ class CodeGenerator {
       }
     }
     response.supportedFeatures = Int64(
-      CodeGeneratorResponse_Feature.FEATURE_PROTO3_OPTIONAL.value,
+      CodeGeneratorResponse_Feature.FEATURE_PROTO3_OPTIONAL.value |
+          CodeGeneratorResponse_Feature.FEATURE_SUPPORTS_EDITIONS.value,
     );
+    response.minimumEdition = Edition.EDITION_PROTO2.value;
+    response.maximumEdition = Edition.EDITION_2023.value;
     _streamOut.add(response.writeToBuffer());
   }
 }

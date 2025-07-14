@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:protobuf/protobuf.dart';
 
@@ -11,6 +12,7 @@ import 'indenting_writer.dart';
 import 'mixins.dart';
 import 'names.dart';
 import 'src/code_generator.dart';
+import 'src/features.dart';
 import 'src/gen/dart_options.pb.dart';
 import 'src/gen/google/api/client.pb.dart';
 import 'src/gen/google/protobuf/compiler/plugin.pb.dart';

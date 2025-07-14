@@ -18,8 +18,6 @@ const String _protobufImportUrl = 'package:protobuf/protobuf.dart';
 const String _typedDataImportPrefix = r'$typed_data';
 const String _typedDataImportUrl = 'dart:typed_data';
 
-enum ProtoSyntax { proto2, proto3 }
-
 /// Generates the Dart output files for one .proto input file.
 ///
 /// Outputs include .pb.dart, pbenum.dart, and .pbjson.dart.
@@ -140,14 +138,18 @@ class FileGenerator extends ProtobufContainer {
   /// Whether cross-references have been resolved.
   bool _linked = false;
 
-  final ProtoSyntax syntax;
+  @override
+  FeatureSet features;
+
+  Edition edition;
 
   FileGenerator(this.descriptor, this.options)
     : protoFileUri = Uri.file(descriptor.name),
-      syntax =
-          descriptor.syntax == 'proto3'
-              ? ProtoSyntax.proto3
-              : ProtoSyntax.proto2 {
+      edition = fileEdition(descriptor),
+      features = mergeFeatures(
+        defaultFeatures(fileEdition(descriptor)),
+        descriptor.options.features,
+      ) {
     if (protoFileUri.isAbsolute) {
       // protoc should never generate an import with an absolute path.
       throw 'FAILURE: Import with absolute path is not supported';
